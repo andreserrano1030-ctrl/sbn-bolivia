@@ -5,138 +5,138 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>BCB Serie B - Verificador</title>
+    <title>Scanner Serie B - Bolivia</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap");
 
       :root {
+        --accent: #1d1d1f;
         --bg: #f8f9fb;
-        --accent: #1e1e1e;
-        --bs10: #007aff;
-        --bs20: #ff9500;
-        --bs50: #8e44ad;
-        --danger: #ff3b30;
-        --success: #34c759;
-        --radius: 24px;
       }
 
       body {
         font-family: "Outfit", sans-serif;
         background: var(--bg);
-        color: #1d1d1f;
         margin: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-height: 100vh;
+        transition: background 0.4s ease;
       }
 
-      /* --- Header Elegante --- */
       header {
-        width: 100%;
-        padding: 40px 0 20px;
+        padding: 40px 20px 10px;
         text-align: center;
       }
 
       header h1 {
-        font-weight: 800;
-        font-size: 1.4rem;
+        font-weight: 900;
+        font-size: 1.6rem;
         margin: 0;
+        color: var(--accent);
+        transition: color 0.4s ease;
         letter-spacing: -1px;
       }
 
-      header p {
-        font-size: 0.85rem;
-        color: #86868b;
-        margin-top: 4px;
-      }
-
-      /* --- Selector de Billetes Moderno --- */
-      .selector-container {
+      /* Selector de Billetes */
+      .selector {
         display: flex;
         background: #ebebeb;
-        padding: 6px;
+        padding: 5px;
         border-radius: 20px;
         margin: 20px 0;
-        gap: 4px;
+        gap: 5px;
       }
 
-      .monto-opt {
-        padding: 12px 24px;
-        border-radius: 16px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        color: #636366;
+      .monto-btn {
+        padding: 12px 25px;
+        border-radius: 15px;
         border: none;
+        font-weight: 700;
+        cursor: pointer;
+        color: #636366;
+        background: transparent;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .monto-opt.active {
+      .monto-btn.active[data-v="10"] {
         background: white;
-        color: var(--color-active);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        transform: translateY(-1px);
+        color: #007aff;
+        box-shadow: 0 4px 10px rgba(0, 122, 255, 0.15);
+      }
+      .monto-btn.active[data-v="20"] {
+        background: white;
+        color: #ff9500;
+        box-shadow: 0 4px 10px rgba(255, 149, 0, 0.15);
+      }
+      .monto-btn.active[data-v="50"] {
+        background: white;
+        color: #8e44ad;
+        box-shadow: 0 4px 10px rgba(142, 68, 173, 0.15);
       }
 
-      /* --- Visor de Escaneo Pro --- */
-      .viewport {
+      /* Visor de Cámara */
+      .camera-container {
         position: relative;
-        width: 340px;
-        height: 340px;
+        width: 320px;
+        height: 320px;
         border-radius: 40px;
-        background: #000;
-        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.2);
         overflow: hidden;
-        margin-top: 10px;
+        background: #000;
+        border: 2px solid var(--accent);
+        transition: border-color 0.4s ease;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
       }
 
       video {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.9;
       }
 
-      /* Máscara inteligente */
-      .scan-mask {
+      /* Capa de enfoque */
+      .focus-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.5); /* Oscurece el resto */
       }
 
-      .focus-ring {
-        width: 280px;
-        height: 70px;
-        border: 2px solid white;
-        border-radius: 20px;
-        box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5); /* Oscurece el exterior */
+      /* EL RECUADRO QUE CAMBIA DE COLOR */
+      .focus-box {
+        width: 260px;
+        height: 75px;
+        border: 3px solid var(--accent); /* Vinculado al color dinámico */
+        border-radius: 18px;
         position: relative;
+        transition: border-color 0.4s ease;
+        background: rgba(255, 255, 255, 0.05);
       }
 
-      /* Animación Láser Sutil */
-      .laser-glow {
+      /* Animación Láser */
+      .laser {
         position: absolute;
-        left: 5%;
         width: 90%;
+        left: 5%;
         height: 2px;
-        background: var(--color-active, #fff);
-        box-shadow: 0 0 20px var(--color-active, #fff);
-        top: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 15px var(--accent);
+        top: 15%;
         opacity: 0;
-        transition: opacity 0.3s;
+        transition:
+          opacity 0.3s,
+          background 0.4s;
       }
 
-      .is-scanning .laser-glow {
+      .scanning .laser {
         opacity: 1;
-        animation: pulseLaser 1.5s infinite ease-in-out;
+        animation: scanMove 1.8s infinite ease-in-out;
       }
 
-      @keyframes pulseLaser {
+      @keyframes scanMove {
         0%,
         100% {
           top: 15%;
@@ -146,134 +146,118 @@
         }
       }
 
-      /* --- Botón de Acción --- */
-      .btn-main {
-        margin-top: 40px;
-        width: 300px;
+      /* Botón de Acción */
+      .btn-scan {
+        margin-top: 35px;
+        width: 320px;
         padding: 20px;
-        border-radius: 24px;
+        border-radius: 25px;
         border: none;
-        background: #1d1d1f;
+        background: var(--accent);
         color: white;
-        font-size: 1rem;
-        font-weight: 600;
+        font-size: 1.1rem;
+        font-weight: 800;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
       }
 
-      .btn-main:disabled {
+      .btn-scan:disabled {
         background: #d1d1d6;
+        color: #8e8e93;
         cursor: not-allowed;
       }
-      .btn-main:active {
-        transform: scale(0.97);
+      .btn-scan:active {
+        transform: scale(0.96);
       }
 
-      /* --- Alerta de Resultado Premium --- */
+      /* Resultado Premium */
       .result-sheet {
         position: fixed;
         bottom: -100%;
         left: 0;
         width: 100%;
         background: white;
-        border-top-left-radius: 32px;
-        border-top-right-radius: 32px;
         padding: 40px 20px;
-        box-sizing: border-box;
-        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
-        transition: bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 1000;
+        border-top-left-radius: 35px;
+        border-top-right-radius: 35px;
+        box-shadow: 0 -15px 50px rgba(0, 0, 0, 0.15);
         text-align: center;
+        transition: bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 200;
+        box-sizing: border-box;
       }
 
       .result-sheet.show {
         bottom: 0;
       }
-
-      .res-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 1.5rem;
-      }
-
       .res-code {
-        font-size: 2.2rem;
-        font-weight: 800;
+        font-size: 2.8rem;
+        font-weight: 900;
+        color: var(--accent);
         margin: 10px 0;
         letter-spacing: -1px;
       }
 
       .btn-close {
-        margin-top: 30px;
-        width: 100%;
-        max-width: 250px;
-        padding: 16px;
-        border-radius: 18px;
+        margin-top: 20px;
+        padding: 16px 50px;
+        border-radius: 20px;
         border: none;
+        font-weight: 800;
         background: #f2f2f7;
-        font-weight: 600;
+        color: #1d1d1f;
         cursor: pointer;
       }
     </style>
   </head>
   <body>
     <header>
-      <h1>BCB Serie B</h1>
-      <p>Verificación de seguridad de cortes</p>
+      <h1 id="mainTitle">VERIFICADOR OFICIAL</h1>
+      <p>Escanee el código de serie lateral</p>
     </header>
 
-    <div class="selector-container">
-      <button
-        class="monto-opt"
-        data-v="10"
-        onclick="updateTheme(10, '#007AFF')">
+    <div class="selector">
+      <button class="monto-btn" data-v="10" onclick="applyTheme(10, '#007AFF')">
         Bs 10
       </button>
-      <button
-        class="monto-opt"
-        data-v="20"
-        onclick="updateTheme(20, '#FF9500')">
+      <button class="monto-btn" data-v="20" onclick="applyTheme(20, '#FF9500')">
         Bs 20
       </button>
-      <button
-        class="monto-opt"
-        data-v="50"
-        onclick="updateTheme(50, '#8E44AD')">
+      <button class="monto-btn" data-v="50" onclick="applyTheme(50, '#8E44AD')">
         Bs 50
       </button>
     </div>
 
-    <div class="viewport" id="vp">
+    <div class="camera-container" id="camFrame">
       <video id="webcam" autoplay playsinline></video>
-      <div class="scan-mask">
-        <div class="focus-ring">
-          <div class="laser-glow" id="laser"></div>
+      <div class="focus-overlay">
+        <div class="focus-box" id="scannerBox">
+          <div class="laser"></div>
         </div>
       </div>
     </div>
 
-    <button class="btn-main" id="btn" onclick="startScan()" disabled>
-      Seleccione un billete
+    <button class="btn-scan" id="scanBtn" onclick="readSerial()" disabled>
+      ELIJA DENOMINACIÓN
     </button>
 
     <div class="result-sheet" id="sheet">
-      <div id="resIcon" class="res-icon"></div>
-      <h2 id="resTitle" style="margin: 0; font-size: 1.2rem"></h2>
-      <div class="res-code" id="resCode"></div>
-      <p id="resDesc" style="color: #86868b; margin: 0; padding: 0 20px"></p>
-      <button class="btn-close" onclick="closeSheet()">Cerrar</button>
+      <div
+        id="statusTag"
+        style="font-weight: 900; font-size: 0.9rem; letter-spacing: 1px"></div>
+      <div class="res-code" id="resVal"></div>
+      <p
+        id="resInfo"
+        style="color: #666; margin-bottom: 25px; line-height: 1.5"></p>
+      <button class="btn-close" onclick="hideSheet()">ENTENDIDO</button>
     </div>
 
-    <canvas id="canvas" style="display: none"></canvas>
+    <canvas id="cropCanvas" style="display: none"></canvas>
 
     <script>
-      let activeV = null;
-      const RANGOS = [
+      let currentMonto = null;
+      const ROBADOS = [
         { denom: 10, inicio: 77100001, fin: 77550000 },
         { denom: 10, inicio: 78000001, fin: 78450000 },
         { denom: 10, inicio: 78900001, fin: 96350000 },
@@ -314,39 +298,41 @@
         { denom: 50, inicio: 91800001, fin: 92250000 },
       ];
 
-      function updateTheme(v, color) {
-        activeV = v;
-        document.documentElement.style.setProperty("--color-active", color);
+      function applyTheme(v, color) {
+        currentMonto = v;
+        document.documentElement.style.setProperty("--accent", color);
+
         document
-          .querySelectorAll(".monto-opt")
-          .forEach((b) => b.classList.remove("active"));
+          .querySelectorAll(".monto-btn")
+          .forEach((btn) => btn.classList.remove("active"));
         document.querySelector(`[data-v="${v}"]`).classList.add("active");
 
-        const btn = document.getElementById("btn");
-        btn.disabled = false;
-        btn.innerText = `Analizar Bs ${v}`;
+        const scanBtn = document.getElementById("scanBtn");
+        scanBtn.disabled = false;
+        scanBtn.innerText = `ANALIZAR BILLETE DE ${v}`;
 
-        if (!window.stream) {
+        if (!window.streamActive) {
           navigator.mediaDevices
             .getUserMedia({ video: { facingMode: "environment" } })
             .then((s) => {
               document.getElementById("webcam").srcObject = s;
-              window.stream = s;
+              window.streamActive = true;
             });
         }
       }
 
-      async function startScan() {
-        document.getElementById("vp").classList.add("is-scanning");
-        document.getElementById("btn").innerText = "Procesando...";
+      async function readSerial() {
+        const frame = document.getElementById("camFrame");
+        frame.classList.add("scanning");
+        document.getElementById("scanBtn").innerText = "PROCESANDO...";
 
         const video = document.getElementById("webcam");
-        const canvas = document.getElementById("canvas");
+        const canvas = document.getElementById("cropCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Simulación de recorte de alta precisión
-        canvas.width = 400;
-        canvas.height = 100;
+        // Captura mejorada (Aumentamos resolución para OCR)
+        canvas.width = 800;
+        canvas.height = 200;
         ctx.drawImage(
           video,
           video.videoWidth / 4,
@@ -355,56 +341,70 @@
           100,
           0,
           0,
-          400,
-          100,
+          800,
+          200,
         );
 
-        try {
-          const {
-            data: { text },
-          } = await Tesseract.recognize(canvas, "eng");
-          const match = text.match(/([A-Z])\s?(\d{5,9})/i);
-          if (match) showResult(match[1].toUpperCase(), match[2]);
-          else alert("Centra bien el código en el recuadro blanco.");
-        } catch (e) {}
+        // Procesamiento de imagen (Grises + Contraste)
+        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let pixels = imgData.data;
+        for (let i = 0; i < pixels.length; i += 4) {
+          let grayscale =
+            pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11;
+          let val = grayscale > 125 ? 255 : 0; // Filtro blanco y negro
+          pixels[i] = pixels[i + 1] = pixels[i + 2] = val;
+        }
+        ctx.putImageData(imgData, 0, 0);
 
-        document.getElementById("vp").classList.remove("is-scanning");
-        document.getElementById("btn").innerText = `Analizar Bs ${activeV}`;
+        try {
+          const result = await Tesseract.recognize(canvas, "eng", {
+            tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+          });
+
+          const rawText = result.data.text.replace(/\s/g, "");
+          const match = rawText.match(/([A-Z])(\d{7,9})/i);
+
+          if (match) {
+            showFinalAlert(match[1].toUpperCase(), match[2]);
+          } else {
+            alert(
+              "Lectura fallida. Asegúrese de que el número esté bien iluminado y dentro del recuadro.",
+            );
+          }
+        } catch (e) {
+          console.error(e);
+        }
+
+        frame.classList.remove("scanning");
+        document.getElementById("scanBtn").innerText =
+          `ANALIZAR BILLETE DE ${currentMonto}`;
       }
 
-      function showResult(letra, num) {
-        const val = parseInt(num);
-        const sheet = document.getElementById("sheet");
-        const isRobado =
+      function showFinalAlert(letra, serie) {
+        const num = parseInt(serie);
+        const isBad =
           letra === "B" &&
-          RANGOS.some(
-            (r) => r.denom === activeV && val >= r.inicio && val <= r.fin,
+          ROBADOS.some(
+            (r) => r.denom === currentMonto && num >= r.inicio && num <= r.fin,
           );
 
-        document.getElementById("resIcon").style.background = isRobado
-          ? "rgba(255, 59, 48, 0.1)"
-          : "rgba(52, 199, 89, 0.1)";
-        document.getElementById("resIcon").style.color = isRobado
-          ? "var(--danger)"
-          : "var(--success)";
-        document.getElementById("resIcon").innerText = isRobado ? "✕" : "✓";
+        const sheet = document.getElementById("sheet");
+        const tag = document.getElementById("statusTag");
 
-        document.getElementById("resTitle").innerText = isRobado
-          ? "BILLETE OBSERVADO"
-          : "BILLETE VÁLIDO";
-        document.getElementById("resTitle").style.color = isRobado
-          ? "var(--danger)"
-          : "var(--success)";
+        tag.innerText = isBad
+          ? "🚨 ALERTA DE SEGURIDAD"
+          : "✅ VERIFICACIÓN EXITOSA";
+        tag.style.color = isBad ? "#FF3B30" : "#34C759";
 
-        document.getElementById("resCode").innerText = `${letra} ${num}`;
-        document.getElementById("resDesc").innerText = isRobado
-          ? "Esta serie pertenece al lote reportado como robado. Verifique con las autoridades."
-          : "No se encontraron coincidencias en la base de datos de billetes robados.";
+        document.getElementById("resVal").innerText = `${letra}${serie}`;
+        document.getElementById("resInfo").innerText = isBad
+          ? "ATENCIÓN: Este billete pertenece a las series robadas. No acepte el billete y reporte a las autoridades."
+          : "El billete no presenta reportes de robo. Verifique de todos modos los otros elementos de seguridad.";
 
         sheet.classList.add("show");
       }
 
-      function closeSheet() {
+      function hideSheet() {
         document.getElementById("sheet").classList.remove("show");
       }
     </script>
