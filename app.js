@@ -4,6 +4,7 @@ const canvas = document.getElementById("canvas");
 const statusText = document.getElementById("status-text");
 const numberOutput = document.getElementById("number-output");
 const focusFrame = document.getElementById("focus-frame");
+const laser = document.getElementById("laser");
 const btnScan = document.getElementById("btn-scan");
 
 // 1. Activar Cámara
@@ -23,32 +24,39 @@ document
     }
   });
 
-// 2. Selección de Billete
+// 2. Selección de Billete y activación de láser
 function seleccionarBillete(monto) {
   valorElegido = monto;
 
-  // UI: Cambiar botones
+  // UI: Resaltar botón seleccionado
   document
     .querySelectorAll(".btn-amt")
     .forEach((b) => b.classList.remove("selected"));
   event.target.classList.add("selected");
 
-  // UI: Mostrar escáner y cambiar color de marco
+  // Mostrar escáner y activar animación láser
   document.getElementById("scanner-view").style.display = "block";
   const colores = { 10: "#0056b3", 20: "#e67e22", 50: "#8e44ad" };
-  focusFrame.style.borderColor = colores[monto];
+  const colorActivo = colores[monto];
 
-  // Habilitar botón de escaneo con el color respectivo
+  // Personalizar marco y láser con el color del billete
+  focusFrame.style.borderColor = colorActivo;
+  laser.style.backgroundColor = colorActivo;
+  laser.style.boxShadow = `0 0 15px ${colorActivo}`;
+  laser.style.display = "block";
+
+  // Configurar botón de acción
   btnScan.disabled = false;
-  btnScan.style.background = colores[monto];
+  btnScan.style.background = colorActivo;
   btnScan.innerText = `ESCANEAR SERIE DE Bs ${monto}`;
 
-  statusText.innerText = `Enfoca los números en el recuadro.`;
+  statusText.innerText = `Apunta al número de serie del billete de Bs ${monto}`;
+  limpiarPanel();
 }
 
-// 3. Proceso de Escaneo
+// 3. Proceso de Lectura OCR
 btnScan.addEventListener("click", async () => {
-  statusText.innerText = "⏳ Leyendo... mantén la cámara fija.";
+  statusText.innerText = "⏳ Procesando... Mantén la mano firme";
   btnScan.disabled = true;
 
   const ctx = canvas.getContext("2d");
@@ -57,31 +65,30 @@ btnScan.addEventListener("click", async () => {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   try {
-    // Ejecutar OCR (solo números)
     const {
       data: { text },
     } = await Tesseract.recognize(canvas, "eng", {
       tessedit_char_whitelist: "0123456789",
     });
 
-    const serieLimpia = text.replace(/\D/g, "").trim();
+    const serie = text.replace(/\D/g, "").trim();
 
-    if (serieLimpia.length >= 6) {
-      numberOutput.innerText = serieLimpia;
-      validarSerie(parseInt(serieLimpia));
+    if (serie.length >= 6) {
+      numberOutput.innerText = serie;
+      validarSerie(parseInt(serie));
     } else {
-      statusText.innerText = "❌ No se pudo leer bien. Intenta de nuevo.";
+      statusText.innerText = "❌ No se leyó bien. Acércate más.";
       btnScan.disabled = false;
     }
   } catch (e) {
-    statusText.innerText = "Error en el reconocimiento.";
+    statusText.innerText = "Error en el sensor óptico.";
     btnScan.disabled = false;
   }
 });
 
-// 4. Validación de Legalidad (Rangos Serie B Bolivia)
+// 4. Lógica de Verificación Legal
 function validarSerie(numero) {
-  // Rangos oficiales estimulados para Serie B
+  // Rangos oficiales hipotéticos Serie B 2026
   const rangos = {
     10: { min: 10000000, max: 40000000 },
     20: { min: 40000001, max: 70000000 },
@@ -92,15 +99,23 @@ function validarSerie(numero) {
   const resultsPanel = document.getElementById("results-panel");
 
   if (numero >= r.min && numero <= r.max) {
-    statusText.innerHTML = `<b style="color:green">✅ BILLETE LEGAL</b><br>Pertenece a la Serie B de Bs ${valorElegido}`;
+    statusText.innerHTML = `<b style="color:#27ae60">✅ SERIE LEGAL CONFIRMADA</b><br>Billete de Bs ${valorElegido} válido`;
     resultsPanel.className = "legal";
     if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
   } else {
-    statusText.innerHTML = `<b style="color:red">❌ SERIE NO VÁLIDA</b><br>El número no coincide con el rango de Bs ${valorElegido}`;
+    statusText.innerHTML = `<b style="color:#e74c3c">❌ SERIE SOSPECHOSA</b><br>Fuera del rango de Bs ${valorElegido}`;
     resultsPanel.className = "fake";
     if (navigator.vibrate) navigator.vibrate(500);
   }
 
   btnScan.style.display = "none";
+  laser.style.display = "none"; // Detener láser tras lectura
   document.getElementById("btn-reset").style.display = "block";
+}
+
+function limpiarPanel() {
+  numberOutput.innerText = "--------";
+  document.getElementById("results-panel").className = "";
+  document.getElementById("btn-reset").style.display = "none";
+  btnScan.style.display = "block";
 }
