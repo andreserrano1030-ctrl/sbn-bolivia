@@ -5,258 +5,338 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Scanner Serie B - Bolivia</title>
+    <title>BCB Sentinel - Serie B</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;600;800&display=swap");
 
       :root {
-        --accent: #1d1d1f;
-        --bg: #f8f9fb;
+        --accent: #007aff;
+        --bg: #09090b;
+        --card: #18181b;
+        --safe: #22c55e;
+        --danger: #ef4444;
+        --text: #fafafa;
       }
 
       body {
         font-family: "Outfit", sans-serif;
         background: var(--bg);
+        color: var(--text);
         margin: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        transition: background 0.4s ease;
+        min-height: 100vh;
+        overflow-x: hidden;
       }
 
+      /* --- Estética de Alta Gama --- */
       header {
-        padding: 40px 20px 10px;
+        width: 100%;
+        padding: 30px 0;
         text-align: center;
+        background: linear-gradient(to bottom, #111, transparent);
       }
 
-      header h1 {
-        font-weight: 900;
-        font-size: 1.6rem;
+      h1 {
+        font-weight: 800;
+        font-size: 1.2rem;
+        letter-spacing: 2px;
         margin: 0;
         color: var(--accent);
-        transition: color 0.4s ease;
-        letter-spacing: -1px;
+        transition: 0.3s;
+      }
+      .sub {
+        font-size: 0.7rem;
+        color: #71717a;
+        text-transform: uppercase;
+        margin-top: 5px;
+        letter-spacing: 1px;
       }
 
-      /* Selector de Billetes */
+      /* --- Selector Segmentado --- */
       .selector {
         display: flex;
-        background: #ebebeb;
-        padding: 5px;
-        border-radius: 20px;
+        background: #27272a;
+        padding: 4px;
+        border-radius: 14px;
         margin: 20px 0;
-        gap: 5px;
       }
 
       .monto-btn {
-        padding: 12px 25px;
-        border-radius: 15px;
+        padding: 10px 22px;
+        border-radius: 10px;
         border: none;
         font-weight: 700;
         cursor: pointer;
-        color: #636366;
+        color: #a1a1aa;
         background: transparent;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .monto-btn.active[data-v="10"] {
-        background: white;
-        color: #007aff;
-        box-shadow: 0 4px 10px rgba(0, 122, 255, 0.15);
+        background: var(--accent);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
       }
       .monto-btn.active[data-v="20"] {
-        background: white;
-        color: #ff9500;
-        box-shadow: 0 4px 10px rgba(255, 149, 0, 0.15);
+        background: #f97316;
+        color: white;
+        box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
       }
       .monto-btn.active[data-v="50"] {
-        background: white;
-        color: #8e44ad;
-        box-shadow: 0 4px 10px rgba(142, 68, 173, 0.15);
+        background: #a855f7;
+        color: white;
+        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
       }
 
-      /* Visor de Cámara */
-      .camera-container {
+      /* --- Controles de Energía --- */
+      .controls {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+      }
+      .btn-icon {
+        background: #27272a;
+        border: 1px solid #3f3f46;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* --- Scanner Pro --- */
+      .viewport {
         position: relative;
-        width: 320px;
-        height: 320px;
+        width: 330px;
+        height: 330px;
         border-radius: 40px;
+        border: 2px solid #3f3f46;
         overflow: hidden;
         background: #000;
-        border: 2px solid var(--accent);
-        transition: border-color 0.4s ease;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
       }
 
       video {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        opacity: 0.7;
       }
 
-      /* Capa de enfoque */
-      .focus-overlay {
+      .scan-layer {
         position: absolute;
         inset: 0;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.5); /* Oscurece el resto */
+        box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
       }
 
-      /* EL RECUADRO QUE CAMBIA DE COLOR */
-      .focus-box {
+      .focus-frame {
         width: 260px;
-        height: 75px;
-        border: 3px solid var(--accent); /* Vinculado al color dinámico */
-        border-radius: 18px;
+        height: 80px;
+        border: 2px solid var(--accent);
+        border-radius: 16px;
         position: relative;
-        transition: border-color 0.4s ease;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
+        transition: 0.3s;
       }
 
-      /* Animación Láser */
       .laser {
         position: absolute;
-        width: 90%;
-        left: 5%;
+        width: 100%;
         height: 2px;
         background: var(--accent);
         box-shadow: 0 0 15px var(--accent);
-        top: 15%;
-        opacity: 0;
-        transition:
-          opacity 0.3s,
-          background 0.4s;
+        top: 0;
+        animation: moveLaser 2s infinite linear;
       }
 
-      .scanning .laser {
-        opacity: 1;
-        animation: scanMove 1.8s infinite ease-in-out;
-      }
-
-      @keyframes scanMove {
-        0%,
-        100% {
-          top: 15%;
+      @keyframes moveLaser {
+        0% {
+          top: 0;
+          opacity: 0;
         }
         50% {
-          top: 85%;
+          opacity: 1;
+        }
+        100% {
+          top: 100%;
+          opacity: 0;
         }
       }
 
-      /* Botón de Acción */
-      .btn-scan {
-        margin-top: 35px;
-        width: 320px;
-        padding: 20px;
-        border-radius: 25px;
-        border: none;
-        background: var(--accent);
-        color: white;
-        font-size: 1.1rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+      /* --- Panel de Historial (Drawer) --- */
+      #historyPanel {
+        position: fixed;
+        right: -100%;
+        top: 0;
+        width: 85%;
+        height: 100%;
+        background: var(--card);
+        z-index: 1000;
+        transition: 0.4s ease;
+        padding: 25px;
+        box-sizing: border-box;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
       }
 
-      .btn-scan:disabled {
-        background: #d1d1d6;
-        color: #8e8e93;
-        cursor: not-allowed;
+      #historyPanel.open {
+        right: 0;
       }
-      .btn-scan:active {
-        transform: scale(0.96);
+      .hist-item {
+        background: #27272a;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        border-left: 4px solid var(--accent);
       }
 
-      /* Resultado Premium */
-      .result-sheet {
+      /* --- Alerta de Resultado --- */
+      .sheet {
         position: fixed;
         bottom: -100%;
         left: 0;
         width: 100%;
-        background: white;
+        background: var(--card);
         padding: 40px 20px;
-        border-top-left-radius: 35px;
-        border-top-right-radius: 35px;
-        box-shadow: 0 -15px 50px rgba(0, 0, 0, 0.15);
+        border-radius: 30px 30px 0 0;
         text-align: center;
-        transition: bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 200;
-        box-sizing: border-box;
+        transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1100;
       }
 
-      .result-sheet.show {
+      .sheet.active {
         bottom: 0;
       }
-      .res-code {
-        font-size: 2.8rem;
-        font-weight: 900;
-        color: var(--accent);
-        margin: 10px 0;
-        letter-spacing: -1px;
+      .code-display {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 15px 0;
       }
-
-      .btn-close {
-        margin-top: 20px;
-        padding: 16px 50px;
+      .badge {
+        padding: 5px 15px;
         border-radius: 20px;
-        border: none;
+        font-size: 0.7rem;
         font-weight: 800;
-        background: #f2f2f7;
-        color: #1d1d1f;
-        cursor: pointer;
+        letter-spacing: 1px;
       }
     </style>
   </head>
   <body>
     <header>
-      <h1 id="mainTitle">VERIFICADOR OFICIAL</h1>
-      <p>Escanee el código de serie lateral</p>
+      <h1 id="brand">BCB SENTINEL</h1>
+      <div class="sub">Validación Profesional de Seguridad</div>
     </header>
 
     <div class="selector">
-      <button class="monto-btn" data-v="10" onclick="applyTheme(10, '#007AFF')">
+      <button class="monto-btn" data-v="10" onclick="setMode(10, '#007AFF')">
         Bs 10
       </button>
-      <button class="monto-btn" data-v="20" onclick="applyTheme(20, '#FF9500')">
+      <button class="monto-btn" data-v="20" onclick="setMode(20, '#f97316')">
         Bs 20
       </button>
-      <button class="monto-btn" data-v="50" onclick="applyTheme(50, '#8E44AD')">
+      <button class="monto-btn" data-v="50" onclick="setMode(50, '#a855f7')">
         Bs 50
       </button>
     </div>
 
-    <div class="camera-container" id="camFrame">
-      <video id="webcam" autoplay playsinline></video>
-      <div class="focus-overlay">
-        <div class="focus-box" id="scannerBox">
+    <div class="controls">
+      <button class="btn-icon" onclick="togglePower()">
+        <span id="pwrIcon">⭕</span> <span id="pwrText">ACTIVAR LENTE</span>
+      </button>
+      <button class="btn-icon" onclick="toggleHistory(true)">
+        📊 HISTORIAL
+      </button>
+    </div>
+
+    <div class="viewport">
+      <video id="cam" autoplay playsinline></video>
+      <div class="scan-layer">
+        <div class="focus-frame" id="fFrame">
           <div class="laser"></div>
         </div>
+        <p
+          id="scanStatus"
+          style="font-size: 0.6rem; color: #71717a; margin-top: 15px">
+          ESPERANDO DENOMINACIÓN...
+        </p>
       </div>
     </div>
 
-    <button class="btn-scan" id="scanBtn" onclick="readSerial()" disabled>
-      ELIJA DENOMINACIÓN
-    </button>
-
-    <div class="result-sheet" id="sheet">
+    <div id="historyPanel">
       <div
-        id="statusTag"
-        style="font-weight: 900; font-size: 0.9rem; letter-spacing: 1px"></div>
-      <div class="res-code" id="resVal"></div>
-      <p
-        id="resInfo"
-        style="color: #666; margin-bottom: 25px; line-height: 1.5"></p>
-      <button class="btn-close" onclick="hideSheet()">ENTENDIDO</button>
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        ">
+        <h2 style="margin: 0">Historial</h2>
+        <button
+          onclick="toggleHistory(false)"
+          style="
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+          ">
+          ×
+        </button>
+      </div>
+      <div id="histList"></div>
+      <button
+        onclick="clearHist()"
+        style="
+          width: 100%;
+          margin-top: 20px;
+          padding: 10px;
+          border-radius: 10px;
+          border: none;
+          background: #ef4444;
+          color: white;
+          font-weight: 700;
+        ">
+        BORRAR TODO
+      </button>
     </div>
 
-    <canvas id="cropCanvas" style="display: none"></canvas>
+    <div class="sheet" id="resultSheet">
+      <div id="badge" class="badge"></div>
+      <div class="code-display" id="resCode">-------</div>
+      <p id="resVerdict" style="color: #a1a1aa; line-height: 1.6"></p>
+      <button
+        onclick="closeResult()"
+        style="
+          width: 100%;
+          padding: 18px;
+          border-radius: 18px;
+          border: none;
+          background: var(--accent);
+          color: white;
+          font-weight: 800;
+          font-size: 1rem;
+          margin-top: 20px;
+        ">
+        NUEVO ESCANEO
+      </button>
+    </div>
+
+    <canvas id="c" style="display: none"></canvas>
 
     <script>
-      let currentMonto = null;
+      let activeMonto = null;
+      let isLive = false;
+      let stream = null;
+      let scanning = false;
+
       const ROBADOS = [
         { denom: 10, inicio: 77100001, fin: 77550000 },
         { denom: 10, inicio: 78000001, fin: 78450000 },
@@ -298,115 +378,164 @@
         { denom: 50, inicio: 91800001, fin: 92250000 },
       ];
 
-      function applyTheme(v, color) {
-        currentMonto = v;
+      function setMode(v, color) {
+        activeMonto = v;
         document.documentElement.style.setProperty("--accent", color);
-
         document
           .querySelectorAll(".monto-btn")
-          .forEach((btn) => btn.classList.remove("active"));
+          .forEach((b) => b.classList.remove("active"));
         document.querySelector(`[data-v="${v}"]`).classList.add("active");
+        document.getElementById("scanStatus").innerText =
+          "ESCANEANDO AUTOMÁTICAMENTE...";
+        if (isLive) startLoop();
+      }
 
-        const scanBtn = document.getElementById("scanBtn");
-        scanBtn.disabled = false;
-        scanBtn.innerText = `ANALIZAR BILLETE DE ${v}`;
-
-        if (!window.streamActive) {
-          navigator.mediaDevices
-            .getUserMedia({ video: { facingMode: "environment" } })
-            .then((s) => {
-              document.getElementById("webcam").srcObject = s;
-              window.streamActive = true;
-            });
+      async function togglePower() {
+        const video = document.getElementById("cam");
+        if (!isLive) {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment", focusMode: "continuous" },
+          });
+          video.srcObject = stream;
+          isLive = true;
+          document.getElementById("pwrText").innerText = "APAGAR LENTE";
+          document.getElementById("pwrIcon").innerText = "🟢";
+          if (activeMonto) startLoop();
+        } else {
+          stream.getTracks().forEach((t) => t.stop());
+          video.srcObject = null;
+          isLive = false;
+          scanning = false;
+          document.getElementById("pwrText").innerText = "ACTIVAR LENTE";
+          document.getElementById("pwrIcon").innerText = "⭕";
         }
       }
 
-      async function readSerial() {
-        const frame = document.getElementById("camFrame");
-        frame.classList.add("scanning");
-        document.getElementById("scanBtn").innerText = "PROCESANDO...";
+      function startLoop() {
+        if (scanning || !isLive) return;
+        scanning = true;
+        process();
+      }
 
-        const video = document.getElementById("webcam");
-        const canvas = document.getElementById("cropCanvas");
+      async function process() {
+        if (!scanning) return;
+        const video = document.getElementById("cam");
+        const canvas = document.getElementById("c");
         const ctx = canvas.getContext("2d");
 
-        // Captura mejorada (Aumentamos resolución para OCR)
-        canvas.width = 800;
-        canvas.height = 200;
+        canvas.width = 500;
+        canvas.height = 120;
         ctx.drawImage(
           video,
           video.videoWidth / 4,
-          video.videoHeight / 2 - 50,
+          video.videoHeight / 2 - 60,
           video.videoWidth / 2,
-          100,
+          120,
           0,
           0,
-          800,
-          200,
+          500,
+          120,
         );
 
-        // Procesamiento de imagen (Grises + Contraste)
-        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        let pixels = imgData.data;
-        for (let i = 0; i < pixels.length; i += 4) {
-          let grayscale =
-            pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11;
-          let val = grayscale > 125 ? 255 : 0; // Filtro blanco y negro
-          pixels[i] = pixels[i + 1] = pixels[i + 2] = val;
-        }
-        ctx.putImageData(imgData, 0, 0);
-
         try {
-          const result = await Tesseract.recognize(canvas, "eng", {
+          const {
+            data: { text },
+          } = await Tesseract.recognize(canvas, "eng", {
             tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
           });
-
-          const rawText = result.data.text.replace(/\s/g, "");
-          const match = rawText.match(/([A-Z])(\d{7,9})/i);
+          const match = text.replace(/\s/g, "").match(/([A-Z])(\d{7,9})/i);
 
           if (match) {
-            showFinalAlert(match[1].toUpperCase(), match[2]);
+            analyze(match[1].toUpperCase(), match[2]);
           } else {
-            alert(
-              "Lectura fallida. Asegúrese de que el número esté bien iluminado y dentro del recuadro.",
-            );
+            setTimeout(process, 600);
           }
         } catch (e) {
-          console.error(e);
+          setTimeout(process, 600);
         }
-
-        frame.classList.remove("scanning");
-        document.getElementById("scanBtn").innerText =
-          `ANALIZAR BILLETE DE ${currentMonto}`;
       }
 
-      function showFinalAlert(letra, serie) {
+      function analyze(letra, serie) {
+        scanning = false;
         const num = parseInt(serie);
-        const isBad =
+        let status = "LEGAL";
+        let color = "var(--safe)";
+
+        // Regla de patrón: Los billetes de Bolivia deben ser letra 'A' o 'B' y tener 8 dígitos.
+        const patternLegal =
+          (letra === "A" || letra === "B") && serie.length >= 8;
+        const isRobado =
           letra === "B" &&
           ROBADOS.some(
-            (r) => r.denom === currentMonto && num >= r.inicio && num <= r.fin,
+            (r) => r.denom === activeMonto && num >= r.inicio && num <= r.fin,
           );
 
-        const sheet = document.getElementById("sheet");
-        const tag = document.getElementById("statusTag");
+        if (!patternLegal) {
+          status = "ILEGAL / FALSO";
+          color = "var(--danger)";
+        } else if (isRobado) {
+          status = "ROBADO (SERIE B)";
+          color = "var(--danger)";
+        }
 
-        tag.innerText = isBad
-          ? "🚨 ALERTA DE SEGURIDAD"
-          : "✅ VERIFICACIÓN EXITOSA";
-        tag.style.color = isBad ? "#FF3B30" : "#34C759";
-
-        document.getElementById("resVal").innerText = `${letra}${serie}`;
-        document.getElementById("resInfo").innerText = isBad
-          ? "ATENCIÓN: Este billete pertenece a las series robadas. No acepte el billete y reporte a las autoridades."
-          : "El billete no presenta reportes de robo. Verifique de todos modos los otros elementos de seguridad.";
-
-        sheet.classList.add("show");
+        showResult(letra + serie, status, color);
+        saveToHistory(letra + serie, status);
       }
 
-      function hideSheet() {
-        document.getElementById("sheet").classList.remove("show");
+      function showResult(code, status, color) {
+        const sheet = document.getElementById("resultSheet");
+        const badge = document.getElementById("badge");
+
+        badge.innerText = status;
+        badge.style.background = color;
+        document.getElementById("resCode").innerText = code;
+        document.getElementById("resCode").style.color = color;
+        document.getElementById("resVerdict").innerText = status.includes(
+          "ROBADO",
+        )
+          ? "ESTA SERIE ESTÁ REPORTADA. NO ACEPTE EL BILLETE."
+          : "EL FORMATO Y SERIE PARECEN CORRECTOS.";
+
+        sheet.classList.add("active");
       }
+
+      function saveToHistory(code, status) {
+        const hist = JSON.parse(localStorage.getItem("bcb_hist") || "[]");
+        hist.unshift({ code, status, time: new Date().toLocaleTimeString() });
+        localStorage.setItem("bcb_hist", JSON.stringify(hist.slice(0, 20)));
+        renderHistory();
+      }
+
+      function renderHistory() {
+        const hist = JSON.parse(localStorage.getItem("bcb_hist") || "[]");
+        document.getElementById("histList").innerHTML = hist
+          .map(
+            (i) => `
+            <div class="hist-item" style="border-color: ${i.status.includes("LEGAL") ? "var(--safe)" : "var(--danger)"}">
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem">
+                    <b>${i.code}</b> <span>${i.time}</span>
+                </div>
+                <div style="font-size:0.7rem; margin-top:5px; color:#a1a1aa">${i.status}</div>
+            </div>
+        `,
+          )
+          .join("");
+      }
+
+      function toggleHistory(show) {
+        document.getElementById("historyPanel").classList.toggle("open", show);
+      }
+      function closeResult() {
+        document.getElementById("resultSheet").classList.remove("active");
+        scanning = true;
+        process();
+      }
+      function clearHist() {
+        localStorage.removeItem("bcb_hist");
+        renderHistory();
+      }
+
+      renderHistory();
     </script>
   </body>
 </html>
