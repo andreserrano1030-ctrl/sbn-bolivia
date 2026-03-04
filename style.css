@@ -1,221 +1,178 @@
 :root {
-  --blue: #0056b3;
-  --orange: #e67e22;
-  --purple: #8e44ad;
-  --dark: #2c3e50;
-  --light: #ecf0f1;
+  --primary: #00f2ff;
+  --b10: #007bff;
+  --b20: #fd7e14;
+  --b50: #6f42c1;
+  --success: #28a745;
+  --error: #dc3545;
 }
 
 body {
-  font-family: "Segoe UI", sans-serif;
-  background: #f0f2f5;
+  font-family: "Inter", sans-serif;
+  background: #0a0a0a;
+  color: white;
   margin: 0;
-  display: flex;
-  justify-content: center;
-}
-.app-container {
-  max-width: 420px;
-  width: 100%;
-  background: white;
-  min-height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* Header y Tags */
-header {
-  text-align: center;
-  margin-bottom: 20px;
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
-.bolivia-tag {
-  background: #d35400;
-  color: white;
-  padding: 3px 12px;
+
+/* Cabecera del Escáner */
+.scan-header {
+  text-align: center;
+  padding: 30px 20px;
+  z-index: 10;
+}
+.status-badge {
+  background: rgba(0, 242, 255, 0.2);
+  color: var(--primary);
+  padding: 5px 15px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: bold;
+  border: 1px solid var(--primary);
+  display: inline-block;
+  margin-bottom: 10px;
 }
 h1 {
-  margin: 8px 0;
-  color: var(--dark);
-  font-size: 24px;
+  font-size: 1.2rem;
+  margin: 0;
+}
+p {
+  color: #888;
+  font-size: 0.8rem;
+  margin: 5px 0 0;
 }
 
-/* Tarjetas y Pasos */
-.card {
-  background: var(--light);
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 15px;
+/* Caja de Cámara */
+.camera-box {
   position: relative;
-  border: 1px solid #ddd;
-}
-.step-num {
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  width: 28px;
-  height: 28px;
-  background: var(--dark);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.btn-main {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  background: var(--dark);
-  color: white;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* Botones de montos */
-.amount-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
-}
-.btn-amt {
-  padding: 18px;
-  border: 2px solid #bdc3c7;
-  background: white;
-  border-radius: 12px;
-  font-size: 20px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn-amt.b10.selected {
-  background: var(--blue);
-  border-color: var(--blue);
-  color: white;
-}
-.btn-amt.b20.selected {
-  background: var(--orange);
-  border-color: var(--orange);
-  color: white;
-}
-.btn-amt.b50.selected {
-  background: var(--purple);
-  border-color: var(--purple);
-  color: white;
-}
-
-/* Contenedor de Video y Escáner */
-.video-container {
-  position: relative;
-  width: 100%;
-  height: 260px;
-  background: black;
-  border-radius: 20px;
+  flex-grow: 1;
+  background: #000;
   overflow: hidden;
 }
-video {
+#reader {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+}
+#reader video {
+  object-fit: cover !important;
 }
 
-/* Marco de enfoque */
-.focus-frame {
+/* Radar e Interfaz Visual */
+.radar-overlay {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: 50px;
-  border: 3px solid white;
-  border-radius: 8px;
-  box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.6);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   pointer-events: none;
+}
+.reticle {
+  width: 280px;
+  height: 160px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  position: relative;
   overflow: hidden;
+  box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.6);
 }
 
-/* ANIMACIÓN DEL LÁSER */
-.scanner-laser {
+.laser {
   position: absolute;
   width: 100%;
-  height: 3px;
-  background-color: white; /* Cambiará por JS según el billete */
+  height: 2px;
+  background: var(--primary);
   top: 0;
-  box-shadow: 0 0 15px white;
-  animation: scan-move 2s linear infinite;
-  display: none; /* Se activa al elegir billete */
+  box-shadow: 0 0 15px var(--primary);
+  animation: moveLaser 2s infinite ease-in-out;
 }
 
-@keyframes scan-move {
-  0% {
-    top: 0;
+@keyframes moveLaser {
+  0%,
+  100% {
+    top: 0%;
+    opacity: 0.5;
   }
   50% {
     top: 100%;
-  }
-  100% {
-    top: 0;
+    opacity: 1;
   }
 }
 
-.btn-scan-action {
+/* Pantalla de Resultados */
+#view-result {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  transition: 0.5s;
+}
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1.1);
+}
+
+.result-card {
+  background: #1a1a1a;
   width: 100%;
-  padding: 18px;
-  border: none;
-  border-radius: 12px;
-  margin-top: 15px;
-  font-size: 18px;
-  font-weight: bold;
-  color: white;
-  background: #ccc;
-  cursor: pointer;
-}
-
-/* Resultados */
-#results-panel {
-  margin-top: 20px;
-  padding: 25px;
+  max-width: 350px;
+  border-radius: 30px;
+  padding: 40px 20px;
   text-align: center;
-  border-radius: 15px;
-  border: 2px solid #eee;
-  transition: 0.3s;
+  border: 1px solid #333;
 }
-#status-text {
-  font-size: 15px;
-  color: #7f8c8d;
-  font-weight: 500;
-}
-#number-output {
-  font-size: 34px;
+.res-amount {
+  font-size: 4rem;
   font-weight: 900;
-  color: var(--dark);
-  letter-spacing: 5px;
-  margin-top: 8px;
+  margin: 20px 0;
+}
+.res-info {
+  background: #222;
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 25px;
+}
+.res-info span {
+  font-size: 10px;
+  color: #666;
+  display: block;
+}
+.res-info strong {
+  font-size: 1.5rem;
+  letter-spacing: 3px;
+  color: var(--primary);
 }
 
-.legal {
-  background: #eafaf1;
-  border-color: #2ecc71 !important;
-}
-.fake {
-  background: #fdf2f2;
-  border-color: #e74c3c !important;
-}
-
-.btn-reset {
-  width: 100%;
-  margin-top: 20px;
-  padding: 12px;
-  border: 1px solid #ddd;
-  background: #fff;
-  border-radius: 10px;
-  color: #333;
+.btn-retry {
+  background: var(--primary);
+  color: #000;
+  border: none;
+  padding: 18px 40px;
+  border-radius: 15px;
   font-weight: bold;
+  width: 100%;
   cursor: pointer;
+}
+
+/* Estilos dinámicos para resultados */
+.legal-bg {
+  border-color: var(--success) !important;
+  box-shadow: 0 0 30px rgba(40, 167, 69, 0.3);
+}
+.fake-bg {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 30px rgba(220, 53, 69, 0.3);
 }

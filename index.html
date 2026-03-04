@@ -5,68 +5,56 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Verificador Serie B - Bolivia</title>
+    <title>Scanner Pro - Serie B</title>
     <link rel="stylesheet" href="style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
   </head>
   <body>
     <div class="app-container">
-      <header>
-        <div class="header-main">
-          <span class="bolivia-tag">BOLIVIA 2026</span>
-          <h1>Verificador Serie B</h1>
-        </div>
-      </header>
+      <div id="view-scanner">
+        <header class="scan-header">
+          <div class="status-badge">AUTO-ESCÁNER ACTIVO</div>
+          <h1>Apunta al código del billete</h1>
+          <p>Serie B · Bolivia 2026</p>
+        </header>
 
-      <div class="card step-card" id="card-cam">
-        <div class="step-num">1</div>
-        <h3>Permisos de Cámara</h3>
-        <p>Necesitamos acceso para leer el número de serie del billete.</p>
-        <button id="btn-activate-cam" class="btn-main">Activar Cámara</button>
-      </div>
-
-      <div class="card step-card" id="card-amount" style="display: none">
-        <div class="step-num">2</div>
-        <h3>Valor del Billete</h3>
-        <div class="amount-grid">
-          <button class="btn-amt b10" onclick="seleccionarBillete(10)">
-            10
-          </button>
-          <button class="btn-amt b20" onclick="seleccionarBillete(20)">
-            20
-          </button>
-          <button class="btn-amt b50" onclick="seleccionarBillete(50)">
-            50
-          </button>
-        </div>
-      </div>
-
-      <section id="scanner-view" style="display: none">
-        <div class="video-container">
-          <video id="video" autoplay playsinline></video>
-          <div class="focus-frame" id="focus-frame">
-            <div class="scanner-laser" id="laser"></div>
+        <div class="camera-box">
+          <div id="reader"></div>
+          <div class="radar-overlay">
+            <div class="reticle">
+              <div class="laser"></div>
+            </div>
           </div>
-          <canvas id="canvas" style="display: none"></canvas>
         </div>
-        <button id="btn-scan" class="btn-scan-action" disabled>
-          ESCANEAR AHORA
-        </button>
-      </section>
 
-      <section id="results-panel">
-        <div id="status-text">Sigue los pasos indicados</div>
-        <div id="number-output">--------</div>
-      </section>
+        <footer class="scan-footer">
+          <div class="hint">Compatible con códigos QR y barras</div>
+        </footer>
+      </div>
 
-      <button
-        id="btn-reset"
-        class="btn-reset"
-        onclick="window.location.reload()"
-        style="display: none">
-        Nueva Verificación
-      </button>
+      <div id="view-result" class="hidden">
+        <div class="result-card">
+          <div id="res-icon"></div>
+          <h2 id="res-title">Analizando...</h2>
+          <div class="res-amount" id="res-val">Bs --</div>
+
+          <div class="res-info">
+            <span>Nº SERIE DETECTADO:</span>
+            <strong id="res-serial">--------</strong>
+          </div>
+
+          <div id="res-msg">Validando con BCB...</div>
+
+          <button class="btn-retry" onclick="resetScanner()">
+            ESCANEAR OTRO
+          </button>
+        </div>
+      </div>
     </div>
+
+    <audio
+      id="beep"
+      src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 
     <script src="app.js"></script>
   </body>

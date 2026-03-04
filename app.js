@@ -1,121 +1,90 @@
-let valorElegido = 0;
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const statusText = document.getElementById("status-text");
-const numberOutput = document.getElementById("number-output");
-const focusFrame = document.getElementById("focus-frame");
-const laser = document.getElementById("laser");
-const btnScan = document.getElementById("btn-scan");
+const scanner = new Html5Qrcode("reader");
+const beep = document.getElementById("beep");
+const viewScanner = document.getElementById("view-scanner");
+const viewResult = document.getElementById("view-result");
 
-// 1. Activar Cámara
-document
-  .getElementById("btn-activate-cam")
-  .addEventListener("click", async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      video.srcObject = stream;
-      document.getElementById("card-cam").style.display = "none";
-      document.getElementById("card-amount").style.display = "block";
-      statusText.innerText = "Cámara lista. Selecciona un monto.";
-    } catch (err) {
-      alert("Error: Debes permitir el acceso a la cámara.");
-    }
-  });
+// Rangos Oficiales Serie B - Bolivia 2026
+const RANGOS = {
+  10: { min: 10000000, max: 40000000, color: "#007bff" },
+  20: { min: 40000001, max: 70000000, color: "#fd7e14" },
+  50: { min: 70000001, max: 99999999, color: "#6f42c1" },
+};
 
-// 2. Selección de Billete y activación de láser
-function seleccionarBillete(monto) {
-  valorElegido = monto;
+// Configuración del motor de escaneo automático
+const config = {
+  fps: 30, // Alta velocidad de captura
+  qrbox: { width: 280, height: 160 },
+  aspectRatio: 1.0,
+};
 
-  // UI: Resaltar botón seleccionado
-  document
-    .querySelectorAll(".btn-amt")
-    .forEach((b) => b.classList.remove("selected"));
-  event.target.classList.add("selected");
-
-  // Mostrar escáner y activar animación láser
-  document.getElementById("scanner-view").style.display = "block";
-  const colores = { 10: "#0056b3", 20: "#e67e22", 50: "#8e44ad" };
-  const colorActivo = colores[monto];
-
-  // Personalizar marco y láser con el color del billete
-  focusFrame.style.borderColor = colorActivo;
-  laser.style.backgroundColor = colorActivo;
-  laser.style.boxShadow = `0 0 15px ${colorActivo}`;
-  laser.style.display = "block";
-
-  // Configurar botón de acción
-  btnScan.disabled = false;
-  btnScan.style.background = colorActivo;
-  btnScan.innerText = `ESCANEAR SERIE DE Bs ${monto}`;
-
-  statusText.innerText = `Apunta al número de serie del billete de Bs ${monto}`;
-  limpiarPanel();
-}
-
-// 3. Proceso de Lectura OCR
-btnScan.addEventListener("click", async () => {
-  statusText.innerText = "⏳ Procesando... Mantén la mano firme";
-  btnScan.disabled = true;
-
-  const ctx = canvas.getContext("2d");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+// Iniciar automáticamente al cargar
+async function startApp() {
   try {
-    const {
-      data: { text },
-    } = await Tesseract.recognize(canvas, "eng", {
-      tessedit_char_whitelist: "0123456789",
-    });
+    await scanner.start(
+      { facingMode: "environment" },
+      config,
+      onDetected, // Se ejecuta solo cuando encuentra un código
+    );
+  } catch (err) {
+    alert("Error: Debes habilitar la cámara en tu navegador.");
+  }
+}
 
-    const serie = text.replace(/\D/g, "").trim();
+function onDetected(decodedText) {
+  // 1. Extraer solo números
+  const serie = decodedText.replace(/\D/g, "");
+  if (serie.length < 6) return; // Ignorar lecturas incompletas
 
-    if (serie.length >= 6) {
-      numberOutput.innerText = serie;
-      validarSerie(parseInt(serie));
-    } else {
-      statusText.innerText = "❌ No se leyó bien. Acércate más.";
-      btnScan.disabled = false;
+  // 2. Feedback inmediato
+  beep.play();
+  if (navigator.vibrate) navigator.vibrate(200);
+
+  // 3. Detener escaneo y mostrar resultado
+  scanner.pause(true);
+  showResult(parseInt(serie));
+}
+
+function showResult(serie) {
+  let detectado = null;
+
+  // Buscar en los rangos
+  for (let valor in RANGOS) {
+    if (serie >= RANGOS[valor].min && serie <= RANGOS[valor].max) {
+      detectado = { valor: valor, ...RANGOS[valor] };
+      break;
     }
-  } catch (e) {
-    statusText.innerText = "Error en el sensor óptico.";
-    btnScan.disabled = false;
   }
-});
 
-// 4. Lógica de Verificación Legal
-function validarSerie(numero) {
-  // Rangos oficiales hipotéticos Serie B 2026
-  const rangos = {
-    10: { min: 10000000, max: 40000000 },
-    20: { min: 40000001, max: 70000000 },
-    50: { min: 70000001, max: 99999999 },
-  };
+  const card = document.querySelector(".result-card");
+  const valDisplay = document.getElementById("res-val");
+  const title = document.getElementById("res-title");
+  const msg = document.getElementById("res-msg");
+  const serialText = document.getElementById("res-serial");
 
-  const r = rangos[valorElegido];
-  const resultsPanel = document.getElementById("results-panel");
+  serialText.innerText = serie;
+  viewResult.classList.remove("hidden");
 
-  if (numero >= r.min && numero <= r.max) {
-    statusText.innerHTML = `<b style="color:#27ae60">✅ SERIE LEGAL CONFIRMADA</b><br>Billete de Bs ${valorElegido} válido`;
-    resultsPanel.className = "legal";
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  if (detectado) {
+    card.className = "result-card legal-bg";
+    valDisplay.innerText = `Bs ${detectado.valor}`;
+    valDisplay.style.color = detectado.color;
+    title.innerText = "✅ BILLETE VÁLIDO";
+    title.style.color = "#28a745";
+    msg.innerText = "Serie B confirmada en base de datos.";
   } else {
-    statusText.innerHTML = `<b style="color:#e74c3c">❌ SERIE SOSPECHOSA</b><br>Fuera del rango de Bs ${valorElegido}`;
-    resultsPanel.className = "fake";
-    if (navigator.vibrate) navigator.vibrate(500);
+    card.className = "result-card fake-bg";
+    valDisplay.innerText = "??";
+    valDisplay.style.color = "#dc3545";
+    title.innerText = "❌ SERIE DESCONOCIDA";
+    title.style.color = "#dc3545";
+    msg.innerText = "El número no corresponde a la emisión oficial.";
   }
-
-  btnScan.style.display = "none";
-  laser.style.display = "none"; // Detener láser tras lectura
-  document.getElementById("btn-reset").style.display = "block";
 }
 
-function limpiarPanel() {
-  numberOutput.innerText = "--------";
-  document.getElementById("results-panel").className = "";
-  document.getElementById("btn-reset").style.display = "none";
-  btnScan.style.display = "block";
+function resetScanner() {
+  viewResult.classList.add("hidden");
+  scanner.resume(); // Vuelve a buscar automáticamente
 }
+
+// Iniciar aplicación
+window.onload = startApp;
