@@ -1,46 +1,72 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verificador de Billetes - Serie B</title>
-    <link rel="stylesheet" href="style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Verificador Serie B - Bolivia</title>
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="app-container">
-        <header>
-            <h1>Verificador Serie B</h1>
-            <p>Billetes de Bolivia 2026</p>
-        </header>
+      <header>
+        <div class="header-main">
+          <span class="bolivia-tag">BOLIVIA 2026</span>
+          <h1>Verificador Serie B</h1>
+        </div>
+        <p class="subtitle">Escaneo oficial de denominación</p>
+      </header>
 
-        <section class="selection-section">
-            <p>1. Selecciona el valor del billete:</p>
-            <div class="button-group">
-                <button class="btn-val" onclick="seleccionarBillete(10)">Bs 10</button>
-                <button class="btn-val" onclick="seleccionarBillete(20)">Bs 20</button>
-                <button class="btn-val" onclick="seleccionarBillete(50)">Bs 50</button>
-            </div>
-        </section>
+      <div class="card step-card" id="card-cam">
+        <div class="step-num">1</div>
+        <h3>Permisos de Cámara</h3>
+        <p>Necesitamos acceso para leer el número de serie.</p>
+        <button id="btn-activate-cam" class="btn-main">Activar Cámara</button>
+      </div>
 
-        <section id="scanner-section" style="display:none;">
-            <div class="camera-wrapper">
-                <video id="video" autoplay playsinline></video>
-                <canvas id="canvas" style="display:none;"></canvas>
-                <div class="scan-guide"></div>
-            </div>
-            
-            <button id="btn-scan" class="btn-action">ESCANEAR NÚMERO</button>
-        </section>
+      <div class="card step-card" id="card-amount" style="display: none">
+        <div class="step-num">2</div>
+        <h3>Valor del Billete</h3>
+        <div class="amount-grid">
+          <button class="btn-amt b10" onclick="seleccionarBillete(10)">
+            10
+          </button>
+          <button class="btn-amt b20" onclick="seleccionarBillete(20)">
+            20
+          </button>
+          <button class="btn-amt b50" onclick="seleccionarBillete(50)">
+            50
+          </button>
+        </div>
+      </div>
 
-        <section id="result-area">
-            <div id="status">Selecciona una denominación para empezar</div>
-            <div id="number-display">-- -- --</div>
-        </section>
-        
-        <button id="btn-reset" class="btn-reset" onclick="window.location.reload()" style="display:none;">Verificar otro billete</button>
+      <section id="scanner-view" style="display: none">
+        <div class="video-container">
+          <video id="video" autoplay playsinline></video>
+          <div class="focus-frame" id="focus-frame"></div>
+          <canvas id="canvas" style="display: none"></canvas>
+        </div>
+        <button id="btn-scan" class="btn-scan-action" disabled>
+          ESCANEAR AHORA
+        </button>
+      </section>
+
+      <section id="results-panel">
+        <div id="status-text">Inicia el proceso arriba</div>
+        <div id="number-output">--------</div>
+      </section>
+
+      <button
+        id="btn-reset"
+        class="btn-reset"
+        onclick="window.location.reload()"
+        style="display: none">
+        Escanear otro billete
+      </button>
     </div>
 
     <script src="app.js"></script>
-</body>
+  </body>
 </html>

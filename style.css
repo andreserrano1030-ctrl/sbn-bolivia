@@ -1,109 +1,191 @@
 :root {
-  --primary: #2c3e50;
-  --accent: #27ae60;
-  --danger: #e74c3c;
+  --blue: #0056b3;
+  --orange: #e67e22;
+  --purple: #8e44ad;
+  --dark: #2c3e50;
+  --light: #ecf0f1;
 }
 
 body {
-  font-family: "Segoe UI", sans-serif;
-  background: #eaeded;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: #f0f2f5;
   margin: 0;
   display: flex;
   justify-content: center;
 }
 .app-container {
-  max-width: 450px;
+  max-width: 420px;
   width: 100%;
   background: white;
   min-height: 100vh;
   padding: 20px;
   box-sizing: border-box;
+}
+
+header {
   text-align: center;
+  margin-bottom: 20px;
 }
-
-header h1 {
-  color: var(--primary);
-  margin-bottom: 5px;
-}
-.button-group {
-  display: flex;
-  justify-content: space-around;
-  margin: 20px 0;
-}
-
-.btn-val {
-  padding: 15px 20px;
-  font-size: 18px;
+.bolivia-tag {
+  background: #d35400;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 10px;
   font-weight: bold;
-  border: 2px solid var(--primary);
+}
+h1 {
+  margin: 5px 0;
+  color: var(--dark);
+  font-size: 22px;
+}
+.subtitle {
+  color: #7f8c8d;
+  font-size: 14px;
+  margin: 0;
+}
+
+.card {
+  background: var(--light);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  position: relative;
+}
+.step-num {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 25px;
+  height: 25px;
+  background: var(--dark);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.btn-main {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: var(--dark);
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.amount-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.btn-amt {
+  padding: 15px;
+  border: 2px solid #bdc3c7;
   background: white;
   border-radius: 10px;
+  font-size: 18px;
+  font-weight: 800;
   cursor: pointer;
   transition: 0.3s;
 }
-.btn-val.active {
-  background: var(--primary);
+
+/* Estilos de selección solicitados */
+.btn-amt.b10.selected {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+}
+.btn-amt.b20.selected {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: white;
+}
+.btn-amt.b50.selected {
+  background: var(--purple);
+  border-color: var(--purple);
   color: white;
 }
 
-.camera-wrapper {
+.video-container {
   position: relative;
   width: 100%;
   height: 250px;
-  background: #000;
+  background: black;
   border-radius: 15px;
   overflow: hidden;
-  margin-top: 10px;
 }
 video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.scan-guide {
+.focus-frame {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 70%;
   height: 40px;
-  border: 2px dashed #00ff00;
+  border: 3px dashed white;
   border-radius: 5px;
   box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
-.btn-action {
+.btn-scan-action {
   width: 100%;
-  background: var(--accent);
-  color: white;
-  border: none;
   padding: 18px;
-  font-size: 20px;
-  border-radius: 10px;
+  border: none;
+  border-radius: 12px;
   margin-top: 15px;
+  font-size: 16px;
   font-weight: bold;
+  color: white;
+  background: #bdc3c7;
+  cursor: pointer;
 }
 
-#result-area {
-  margin-top: 25px;
-  padding: 15px;
-  border-radius: 10px;
-  background: #f8f9fa;
+#results-panel {
+  margin-top: 20px;
+  padding: 20px;
+  text-align: center;
+  border-radius: 12px;
   border: 1px solid #ddd;
 }
-#number-display {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--primary);
-  margin-top: 10px;
-  letter-spacing: 2px;
+#status-text {
+  font-size: 14px;
+  color: #7f8c8d;
 }
+#number-output {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--dark);
+  letter-spacing: 4px;
+  margin-top: 5px;
+}
+
+.legal {
+  background: #d4edda;
+  border-color: #c3e6cb !important;
+}
+.fake {
+  background: #f8d7da;
+  border-color: #f5c6cb !important;
+}
+
 .btn-reset {
-  margin-top: 20px;
-  background: #95a5a6;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
   width: 100%;
+  margin-top: 15px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background: none;
+  border-radius: 8px;
+  color: #7f8c8d;
+  cursor: pointer;
 }

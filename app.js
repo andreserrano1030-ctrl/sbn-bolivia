@@ -1,83 +1,106 @@
-let denominacionGlobal = 0;
+let valorElegido = 0;
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
-const status = document.getElementById("status");
-const numberDisplay = document.getElementById("number-display");
+const statusText = document.getElementById("status-text");
+const numberOutput = document.getElementById("number-output");
+const focusFrame = document.getElementById("focus-frame");
+const btnScan = document.getElementById("btn-scan");
 
-// 1. Selección de billete y apertura de cámara
-async function seleccionarBillete(valor) {
-  denominacionGlobal = valor;
-
-  // Marcar botón activo
-  document
-    .querySelectorAll(".btn-val")
-    .forEach((b) => b.classList.remove("active"));
-  event.target.classList.add("active");
-
-  document.getElementById("scanner-section").style.display = "block";
-  status.innerText = `Enfoca el número de serie del billete de Bs ${valor}`;
-
-  if (!video.srcObject) {
+// 1. Activar Cámara
+document
+  .getElementById("btn-activate-cam")
+  .addEventListener("click", async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
       video.srcObject = stream;
+      document.getElementById("card-cam").style.display = "none";
+      document.getElementById("card-amount").style.display = "block";
+      statusText.innerText = "Cámara lista. Selecciona un monto.";
     } catch (err) {
-      alert("Acceso a cámara denegado o no disponible.");
+      alert("Error: Debes permitir el acceso a la cámara.");
     }
-  }
+  });
+
+// 2. Selección de Billete
+function seleccionarBillete(monto) {
+  valorElegido = monto;
+
+  // UI: Cambiar botones
+  document
+    .querySelectorAll(".btn-amt")
+    .forEach((b) => b.classList.remove("selected"));
+  event.target.classList.add("selected");
+
+  // UI: Mostrar escáner y cambiar color de marco
+  document.getElementById("scanner-view").style.display = "block";
+  const colores = { 10: "#0056b3", 20: "#e67e22", 50: "#8e44ad" };
+  focusFrame.style.borderColor = colores[monto];
+
+  // Habilitar botón de escaneo con el color respectivo
+  btnScan.disabled = false;
+  btnScan.style.background = colores[monto];
+  btnScan.innerText = `ESCANEAR SERIE DE Bs ${monto}`;
+
+  statusText.innerText = `Enfoca los números en el recuadro.`;
 }
 
-// 2. Proceso de Escaneo con Tesseract
-document.getElementById("btn-scan").addEventListener("click", async () => {
-  if (denominacionGlobal === 0) return alert("Elige primero un billete");
+// 3. Proceso de Escaneo
+btnScan.addEventListener("click", async () => {
+  statusText.innerText = "⏳ Leyendo... mantén la cámara fija.";
+  btnScan.disabled = true;
 
-  status.innerText = "🔍 Analizando imagen...";
-  const context = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   try {
-    // Configuramos Tesseract para leer solo dígitos
-    const result = await Tesseract.recognize(canvas, "eng", {
+    // Ejecutar OCR (solo números)
+    const {
+      data: { text },
+    } = await Tesseract.recognize(canvas, "eng", {
       tessedit_char_whitelist: "0123456789",
-      logger: (m) =>
-        console.log(m.status + ": " + Math.round(m.progress * 100) + "%"),
     });
 
-    const numExtraido = result.data.text.replace(/\D/g, "").trim();
+    const serieLimpia = text.replace(/\D/g, "").trim();
 
-    if (numExtraido.length >= 6) {
-      numberDisplay.innerText = numExtraido;
-      validarBillete(parseInt(numExtraido));
+    if (serieLimpia.length >= 6) {
+      numberOutput.innerText = serieLimpia;
+      validarSerie(parseInt(serieLimpia));
     } else {
-      status.innerText = "❌ No se leyó bien. Intenta de nuevo.";
+      statusText.innerText = "❌ No se pudo leer bien. Intenta de nuevo.";
+      btnScan.disabled = false;
     }
   } catch (e) {
-    status.innerText = "Error en el sistema de lectura.";
+    statusText.innerText = "Error en el reconocimiento.";
+    btnScan.disabled = false;
   }
 });
 
-// 3. Validación Legal de la Serie B (Bolivia 2026)
-function validarBillete(numero) {
-  // Rangos oficiales (Ejemplo: debes ajustarlos con datos del BCB)
-  const rangosSerieB = {
+// 4. Validación de Legalidad (Rangos Serie B Bolivia)
+function validarSerie(numero) {
+  // Rangos oficiales estimulados para Serie B
+  const rangos = {
     10: { min: 10000000, max: 40000000 },
     20: { min: 40000001, max: 70000000 },
     50: { min: 70000001, max: 99999999 },
   };
 
-  const limite = rangosSerieB[denominacionGlobal];
+  const r = rangos[valorElegido];
+  const resultsPanel = document.getElementById("results-panel");
 
-  if (numero >= limite.min && numero <= limite.max) {
-    status.innerHTML = `<b style="color:green; font-size:1.5rem;">✅ BILLETE LEGAL</b><br>Serie B de Bs ${denominacionGlobal} confirmada.`;
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (numero >= r.min && numero <= r.max) {
+    statusText.innerHTML = `<b style="color:green">✅ BILLETE LEGAL</b><br>Pertenece a la Serie B de Bs ${valorElegido}`;
+    resultsPanel.className = "legal";
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
   } else {
-    status.innerHTML = `<b style="color:red; font-size:1.5rem;">❌ POSIBLE FALSO</b><br>El número no corresponde a la emisión de Bs ${denominacionGlobal}.`;
+    statusText.innerHTML = `<b style="color:red">❌ SERIE NO VÁLIDA</b><br>El número no coincide con el rango de Bs ${valorElegido}`;
+    resultsPanel.className = "fake";
     if (navigator.vibrate) navigator.vibrate(500);
   }
 
+  btnScan.style.display = "none";
   document.getElementById("btn-reset").style.display = "block";
 }
