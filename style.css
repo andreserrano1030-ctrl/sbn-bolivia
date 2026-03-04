@@ -1,71 +1,109 @@
+:root {
+  --primary: #2c3e50;
+  --accent: #27ae60;
+  --danger: #e74c3c;
+}
+
 body {
-  font-family: sans-serif;
-  background: #f0f2f5;
+  font-family: "Segoe UI", sans-serif;
+  background: #eaeded;
+  margin: 0;
   display: flex;
   justify-content: center;
-  padding: 20px;
 }
-.container {
-  max-width: 400px;
+.app-container {
+  max-width: 450px;
   width: 100%;
   background: white;
+  min-height: 100vh;
   padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
   text-align: center;
 }
-.camera-container {
+
+header h1 {
+  color: var(--primary);
+  margin-bottom: 5px;
+}
+.button-group {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+}
+
+.btn-val {
+  padding: 15px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  border: 2px solid var(--primary);
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.btn-val.active {
+  background: var(--primary);
+  color: white;
+}
+
+.camera-wrapper {
   position: relative;
   width: 100%;
   height: 250px;
   background: #000;
-  border-radius: 10px;
+  border-radius: 15px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-top: 10px;
 }
 video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.overlay {
+.scan-guide {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 80%;
+  width: 70%;
   height: 40px;
-  border: 2px solid #00ff00;
-  box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-}
-button {
-  padding: 12px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
+  border: 2px dashed #00ff00;
   border-radius: 5px;
-  margin: 5px;
-  transition: 0.3s;
+  box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
 }
-#start-camera {
-  background: #007bff;
+
+.btn-action {
+  width: 100%;
+  background: var(--accent);
   color: white;
-}
-#scan-btn {
-  background: #28a745;
-  color: white;
-}
-#scan-btn:disabled {
-  background: #ccc;
-}
-#result-container {
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid #ddd;
+  border: none;
+  padding: 18px;
+  font-size: 20px;
   border-radius: 10px;
+  margin-top: 15px;
+  font-weight: bold;
 }
-#detected-text {
-  color: #d9534f;
+
+#result-area {
+  margin-top: 25px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+}
+#number-display {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--primary);
+  margin-top: 10px;
   letter-spacing: 2px;
+}
+.btn-reset {
+  margin-top: 20px;
+  background: #95a5a6;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  width: 100%;
 }

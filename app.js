@@ -1,155 +1,83 @@
+let denominacionGlobal = 0;
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
-const scanBtn = document.getElementById("scan-btn");
-const startBtn = document.getElementById("start-camera");
-const detectedText = document.getElementById("detected-text");
 const status = document.getElementById("status");
+const numberDisplay = document.getElementById("number-display");
 
-// 1. Activar la cámara
-startBtn.addEventListener("click", async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-    });
-    video.srcObject = stream;
-    scanBtn.disabled = false;
-    startBtn.style.display = "none";
-    status.innerText = "Cámara lista";
-  } catch (err) {
-    alert("Error al acceder a la cámara: " + err);
+// 1. Selección de billete y apertura de cámara
+async function seleccionarBillete(valor) {
+  denominacionGlobal = valor;
+
+  // Marcar botón activo
+  document
+    .querySelectorAll(".btn-val")
+    .forEach((b) => b.classList.remove("active"));
+  event.target.classList.add("active");
+
+  document.getElementById("scanner-section").style.display = "block";
+  status.innerText = `Enfoca el número de serie del billete de Bs ${valor}`;
+
+  if (!video.srcObject) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      video.srcObject = stream;
+    } catch (err) {
+      alert("Acceso a cámara denegado o no disponible.");
+    }
   }
-});
+}
 
-// 2. Capturar y Procesar con OCR
-scanBtn.addEventListener("click", async () => {
-  status.innerText = "Procesando...";
-  scanBtn.disabled = true;
+// 2. Proceso de Escaneo con Tesseract
+document.getElementById("btn-scan").addEventListener("click", async () => {
+  if (denominacionGlobal === 0) return alert("Elige primero un billete");
 
-  // Dibujar el cuadro del video en el canvas
+  status.innerText = "🔍 Analizando imagen...";
   const context = canvas.getContext("2d");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  // Ejecutar Tesseract.js para leer el texto
   try {
-    const {
-      data: { text },
-    } = await Tesseract.recognize(
-      canvas,
-      "eng", // El inglés funciona mejor para números y letras latinas
-      { logger: (m) => console.log(m) },
-    );
+    // Configuramos Tesseract para leer solo dígitos
+    const result = await Tesseract.recognize(canvas, "eng", {
+      tessedit_char_whitelist: "0123456789",
+      logger: (m) =>
+        console.log(m.status + ": " + Math.round(m.progress * 100) + "%"),
+    });
 
-    // Limpiar el texto (quitar espacios y dejar solo caracteres de serie)
-    const cleanText = text.replace(/[^A-Z0-9]/g, "").trim();
+    const numExtraido = result.data.text.replace(/\D/g, "").trim();
 
-    if (cleanText.leconst video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
-const scanBtn = document.getElementById('scan-btn');
-const startBtn = document.getElementById('start-camera');
-const detectedText = document.getElementById('detected-text');
-const statusMsg = document.getElementById('status');
-
-// 1. Iniciar cámara trasera
-startBtn.addEventListener('click', async () => {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "environment" } 
-        });
-        video.srcObject = stream;
-        scanBtn.disabled = false;
-        startBtn.style.display = 'none';
-        statusMsg.innerText = "Cámara lista. Enfoca los números.";
-    } catch (err) {
-        alert("Error de cámara: " + err);
-    }
-});
-
-// 2. Procesar imagen buscando solo números
-scanBtn.addEventListener('click', async () => {
-    statusMsg.innerText = "Escaneando números...";
-    scanBtn.disabled = true;
-
-    const context = canvas.getContext('2d');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    try {
-        // Configuramos Tesseract para que solo busque dígitos (0-9)
-        const { data: { text } } = await Tesseract.recognize(
-            canvas,
-            'eng', 
-            { 
-                tessedit_char_whitelist: '0123456789', // ESTO FILTRA SOLO NÚMEROS
-                logger: m => console.log(m.progress) 
-            }
-        );
-
-        // Limpiamos el texto de espacios o saltos de línea
-        const soloNumeros = text.replace(/\D/g, '').trim();
-        
-        if (soloNumeros.length >= 7) {
-            detectedText.innerText = "Nº: " + soloNumeros;
-            validarLegalidad(parseInt(soloNumeros));
-        } else {
-            detectedText.innerText = "Error de lectura";
-            statusMsg.innerText = "Asegúrate de que haya buena luz.";
-        }
-    } catch (error) {
-        statusMsg.innerText = "Error en el escaneo.";
-    }
-    
-    scanBtn.disabled = false;
-});
-
-// 3. Lógica de validación (Rangos Serie B Bolivia)
-function validarLegalidad(numero) {
-    // Rangos aproximados Serie B (Ejemplos basados en BCB)
-    const rangos = [
-        {denominacion: "Bs 10", min: 10000000, max: 45000000},
-        {denominacion: "Bs 20", min: 45000001, max: 80000000},
-        {denominacion: "Bs 50", min: 80000001, max: 99999999}
-    ];
-
-    let esValido = false;
-    let billeteTipo = "";
-
-    for (let rango of rangos) {
-        if (numero >= rango.min && numero <= rango.max) {
-            esValido = true;
-            billeteTipo = rango.denominacion;
-            break;
-        }
-    }
-
-    if (esValido) {
-        statusMsg.innerHTML = `<b style="color:green">✅ SERIE LEGAL (${billeteTipo})</b><br>Rango verificado en BCB.`;
+    if (numExtraido.length >= 6) {
+      numberDisplay.innerText = numExtraido;
+      validarBillete(parseInt(numExtraido));
     } else {
-        statusMsg.innerHTML = `<b style="color:red">❌ SERIE NO REGISTRADA</b><br>Posible billete falso o fuera de rango.`;
+      status.innerText = "❌ No se leyó bien. Intenta de nuevo.";
     }
-}ngth > 3) {
-      detectedText.innerText = cleanText;
-      validarSerie(cleanText);
-    } else {
-      detectedText.innerText = "No detectado";
-      status.innerText = "Intenta de nuevo";
-    }
-  } catch (error) {
-    console.error(error);
-    status.innerText = "Error en OCR";
+  } catch (e) {
+    status.innerText = "Error en el sistema de lectura.";
   }
-
-  scanBtn.disabled = false;
 });
 
-// 3. Lógica de validación (Ejemplo para Bolivia Serie B)
-function validarSerie(serie) {
-  // Ejemplo de lógica: si empieza con B y tiene longitud correcta
-  if (serie.startsWith("B")) {
-    status.innerHTML = "<b style='color:green'>Formato Serie B detectado</b>";
+// 3. Validación Legal de la Serie B (Bolivia 2026)
+function validarBillete(numero) {
+  // Rangos oficiales (Ejemplo: debes ajustarlos con datos del BCB)
+  const rangosSerieB = {
+    10: { min: 10000000, max: 40000000 },
+    20: { min: 40000001, max: 70000000 },
+    50: { min: 70000001, max: 99999999 },
+  };
+
+  const limite = rangosSerieB[denominacionGlobal];
+
+  if (numero >= limite.min && numero <= limite.max) {
+    status.innerHTML = `<b style="color:green; font-size:1.5rem;">✅ BILLETE LEGAL</b><br>Serie B de Bs ${denominacionGlobal} confirmada.`;
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   } else {
-    status.innerHTML = "<b style='color:orange'>Serie no reconocida como B</b>";
+    status.innerHTML = `<b style="color:red; font-size:1.5rem;">❌ POSIBLE FALSO</b><br>El número no corresponde a la emisión de Bs ${denominacionGlobal}.`;
+    if (navigator.vibrate) navigator.vibrate(500);
   }
+
+  document.getElementById("btn-reset").style.display = "block";
 }
