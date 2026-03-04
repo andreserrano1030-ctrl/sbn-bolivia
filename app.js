@@ -1,90 +1,91 @@
-const scanner = new Html5Qrcode("reader");
-const beep = document.getElementById("beep");
-const viewScanner = document.getElementById("view-scanner");
-const viewResult = document.getElementById("view-result");
+let selectedValue = 0;
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const btnScan = document.getElementById("btnScan");
+const statusText = document.getElementById("status");
+const serialText = document.getElementById("serial");
 
-// Rangos Oficiales Serie B - Bolivia 2026
-const RANGOS = {
-  10: { min: 10000000, max: 40000000, color: "#007bff" },
-  20: { min: 40000001, max: 70000000, color: "#fd7e14" },
-  50: { min: 70000001, max: 99999999, color: "#6f42c1" },
-};
+// Iniciar cámara automáticamente
+navigator.mediaDevices
+  .getUserMedia({ video: { facingMode: "environment" } })
+  .then((stream) => {
+    video.srcObject = stream;
+  })
+  .catch((err) => {
+    alert("Error al acceder a la cámara");
+  });
 
-// Configuración del motor de escaneo automático
-const config = {
-  fps: 30, // Alta velocidad de captura
-  qrbox: { width: 280, height: 160 },
-  aspectRatio: 1.0,
-};
+function selectDenom(val) {
+  selectedValue = val;
+  document
+    .querySelectorAll(".btn-amt")
+    .forEach((b) => b.classList.remove("active"));
+  event.target.classList.add("active");
+  btnScan.disabled = false;
+  btnScan.classList.add("ready");
+  statusText.innerText = `Enfoca la serie de Bs ${val} en el recuadro`;
+}
 
-// Iniciar automáticamente al cargar
-async function startApp() {
+btnScan.onclick = async () => {
+  statusText.innerText = "🔍 ANALIZANDO...";
+  const ctx = canvas.getContext("2d");
+
+  // CALCULAR RECORTE DE PRECISIÓN
+  const videoWidth = video.videoWidth;
+  const videoHeight = video.videoHeight;
+  const rect = document.getElementById("scanWindow").getBoundingClientRect();
+  const videoRect = video.getBoundingClientRect();
+
+  // Proporciones entre el video real y lo que se ve en pantalla
+  const scaleX = videoWidth / videoRect.width;
+  const scaleY = videoHeight / videoRect.height;
+
+  const sx = (rect.left - videoRect.left) * scaleX;
+  const sy = (rect.top - videoRect.top) * scaleY;
+  const sw = rect.width * scaleX;
+  const sh = rect.height * scaleY;
+
+  // Ajustar canvas al tamaño del recorte
+  canvas.width = sw;
+  canvas.height = sh;
+
+  // Dibujar solo el área del rectángulo en el canvas
+  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  // Ejecutar OCR solo sobre el recorte
   try {
-    await scanner.start(
-      { facingMode: "environment" },
-      config,
-      onDetected, // Se ejecuta solo cuando encuentra un código
-    );
-  } catch (err) {
-    alert("Error: Debes habilitar la cámara en tu navegador.");
-  }
-}
+    const result = await Tesseract.recognize(canvas, "eng", {
+      tessedit_char_whitelist: "0123456789",
+    });
 
-function onDetected(decodedText) {
-  // 1. Extraer solo números
-  const serie = decodedText.replace(/\D/g, "");
-  if (serie.length < 6) return; // Ignorar lecturas incompletas
+    const serie = result.data.text.replace(/\D/g, "");
 
-  // 2. Feedback inmediato
-  beep.play();
-  if (navigator.vibrate) navigator.vibrate(200);
-
-  // 3. Detener escaneo y mostrar resultado
-  scanner.pause(true);
-  showResult(parseInt(serie));
-}
-
-function showResult(serie) {
-  let detectado = null;
-
-  // Buscar en los rangos
-  for (let valor in RANGOS) {
-    if (serie >= RANGOS[valor].min && serie <= RANGOS[valor].max) {
-      detectado = { valor: valor, ...RANGOS[valor] };
-      break;
+    if (serie.length >= 6) {
+      serialText.innerText = serie;
+      validar(parseInt(serie));
+    } else {
+      statusText.innerText = "❌ No detectado. Ajusta la posición.";
     }
+  } catch (e) {
+    statusText.innerText = "Error en el escáner.";
   }
+};
 
-  const card = document.querySelector(".result-card");
-  const valDisplay = document.getElementById("res-val");
-  const title = document.getElementById("res-title");
-  const msg = document.getElementById("res-msg");
-  const serialText = document.getElementById("res-serial");
+function validar(num) {
+  const rangos = {
+    10: { min: 10000000, max: 40000000 },
+    20: { min: 40000001, max: 70000000 },
+    50: { min: 70000001, max: 99999999 },
+  };
 
-  serialText.innerText = serie;
-  viewResult.classList.remove("hidden");
-
-  if (detectado) {
-    card.className = "result-card legal-bg";
-    valDisplay.innerText = `Bs ${detectado.valor}`;
-    valDisplay.style.color = detectado.color;
-    title.innerText = "✅ BILLETE VÁLIDO";
-    title.style.color = "#28a745";
-    msg.innerText = "Serie B confirmada en base de datos.";
+  const r = rangos[selectedValue];
+  if (num >= r.min && num <= r.max) {
+    statusText.innerHTML =
+      "<b style='color:#2ecc71; font-size:1.2rem;'>✅ BILLETE LEGAL</b>";
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
   } else {
-    card.className = "result-card fake-bg";
-    valDisplay.innerText = "??";
-    valDisplay.style.color = "#dc3545";
-    title.innerText = "❌ SERIE DESCONOCIDA";
-    title.style.color = "#dc3545";
-    msg.innerText = "El número no corresponde a la emisión oficial.";
+    statusText.innerHTML =
+      "<b style='color:#e74c3c; font-size:1.2rem;'>❌ SERIE NO VÁLIDA</b>";
+    if (navigator.vibrate) navigator.vibrate(500);
   }
 }
-
-function resetScanner() {
-  viewResult.classList.add("hidden");
-  scanner.resume(); // Vuelve a buscar automáticamente
-}
-
-// Iniciar aplicación
-window.onload = startApp;
